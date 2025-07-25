@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Court Document Processor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f9;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    h1, h2 {
+      color: #2c3e50;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+
+    form {
+      margin-bottom: 30px;
+    }
+
+    input[type="text"],
+    input[type="file"],
+    input[type="date"],
+    button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    label {
+      margin-top: 10px;
+      display: block;
+      font-weight: bold;
+    }
+
+    input[type="checkbox"] {
+      width: auto;
+      margin-right: 5px;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    #response, #search-status {
+      margin: 15px 0;
+      padding: 10px;
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      border-left: 4px solid #2e7d32;
+      border-radius: 4px;
+      display: none;
+    }
+
+    #results {
+      list-style: none;
+      padding: 0;
+    }
+
+    #results li {
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    #results li b {
+      font-size: 18px;
+      color: #34495e;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Court Document Processor</h1>
+
+    <h2>Upload PDF</h2>
+    <form id="uploadForm">
+      <input type="file" name="pdf" id="pdf" accept=".pdf" required>
+      <button type="submit">Upload and Index</button>
+    </form>
+    <div id="response"></div>
+
+    <h2>Search Documents</h2>
+    <form id="searchForm">
+      <input type="text" id="query" placeholder="Search query" required>
+      <label><input type="checkbox" id="semantic"> Use Semantic Search</label>
+      <label>Date From:</label><input type="date" id="date_from">
+      <label>Date To:</label><input type="date" id="date_to">
+      <button type="submit">Search</button>
+    </form>
+    <div id="search-status"></div>
+
+    <h3>Results:</h3>
+    <ul id="results"></ul>
+  </div>
+
+  <script>
+    // PDF Upload
+    document.getElementById("uploadForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const formData = new FormData();
+      const file = document.getElementById("pdf").files[0];
+      formData.append("pdf", file);
+
+      fetch("/upload", {
+        method: "POST",
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        const responseBox = document.getElementById("response");
+        responseBox.style.display = "block";
+        if (data.error) {
+          responseBox.style.backgroundColor = "#ffebee";
+          responseBox.style.color = "#c62828";
+          responseBox.style.borderLeft = "4px solid #c62828";
+          responseBox.textContent = "Error: " + data.error;
+        } else {
+          responseBox.style.backgroundColor = "#e8f5e9";
+          responseBox.style.color = "#2e7d32";
+          responseBox.style.borderLeft = "4px solid #2e7d32";
+          responseBox.textContent = `Success: "${data.title}" indexed`;
+        }
+      })
+      .catch(err => {
+        const responseBox = document.getElementById("response");
+        responseBox.style.display = "block";
+        responseBox.style.backgroundColor = "#ffebee";
+        responseBox.style.color = "#c62828";
+        responseBox.style.borderLeft = "4px solid #c62828";
+        responseBox.textContent = "Upload failed: " + err.message;
+      });
+    });
+
+    // Search Documents
+    document.getElementById("searchForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const query = document.getElementById("query").value;
+      const dateFrom = document.getElementById("date_from").value;
+      const dateTo = document.getElementById("date_to").value;
+      const semantic = document.getElementById("semantic").checked;
+
+      document.getElementById("search-status").style.display = "block";
+      document.getElementById("search-status").textContent = "Searching...";
+
+      fetch("/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: query,
+          date_from: dateFrom,
+          date_to: dateTo,
+          semantic: semantic
+        })
+      })
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById("results");
+          list.innerHTML = "";
+          if (data.length === 0) {
+            document.getElementById("search-status").textContent = "No results found.";
+            return;
+          }
+          document.getElementById("search-status").textContent = `${data.length} result(s) found.`;
+          data.forEach(doc => {
+            const li = document.createElement("li");
+            li.innerHTML = `<b>${doc.title || "Untitled"}</b> (${doc.date || "No date"})<br><p>${doc.content.substring(0, 300)}...</p>`;
+            list.appendChild(li);
+          });
+        })
+        .catch(err => {
+          document.getElementById("search-status").textContent = "Search failed: " + err.message;
+        });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# VSCode settings
+.vscode/
+
+# PyCharm settings
+.idea/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# MyPy / Pyright / Pylint / Bandit
+.mypy_cache/
+.pyright/
+.pylint.d/
+bandit.yaml
+
+# Logs
+*.log
+
+# dotenv
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Compiled C extensions
+*.so
+
+# PyInstaller
+*.spec
+
+#Ignoring the demo files
+*.mov
